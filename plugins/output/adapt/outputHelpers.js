@@ -301,7 +301,7 @@ function validateCourse(data, cb) {
   ];
 
   for (let i = 0, j = contentHierarchy.length - 1; i < j; i++) {
-    errors += iterateThroughChildren(contentHierarchy[i], contentHierarchy[i + 1]);
+    errors += iterateThroughChildren(contentHierarchy[i], contentHierarchy[i + 1], contentHierarchy);
   }
 
   if (errors.length !== 0) return cb(errors, false);
@@ -309,7 +309,7 @@ function validateCourse(data, cb) {
   return cb(null, true);
 }
 
-function iterateThroughChildren(parents, children) {
+function iterateThroughChildren(parents, children, contentHierarchy) {
   let errors = '';
   if (typeof parents === 'undefined') return errors;
 
@@ -326,7 +326,8 @@ function iterateThroughChildren(parents, children) {
     let childType = app.polyglot.t('app.children');
 
     if (typeof children === 'undefined') {
-      appendError(parentType, parent.title, childType);
+      const pageTitle = getPageTitleByChildren(contentHierarchy, parent);
+      appendError(parentType, pageTitle, childType);
       return;
     }
 
@@ -334,10 +335,86 @@ function iterateThroughChildren(parents, children) {
     let found = children.find(child => JSON.stringify(child._parentId) === JSON.stringify(parent._id));
 
     if (typeof found === 'undefined') {
-      appendError(parentType, parent.title, childType);
+      const pageTitle = getPageTitleByChildren(contentHierarchy, parent);
+      appendError(parentType, pageTitle, childType);
     }
   });
   return errors;
+}
+
+/**
+ * Get item title with the full path in the title, example: Block Title (Menu Title > Page Title)
+ * @param {array} contentHierarchy
+ * @param {object} item
+ * @returns {string|*}
+ */
+function getPageTitleByChildren(contentHierarchy, item) {
+  let title = '';
+  let hierarchyPath = [];
+  let targetItem = item;
+  let totalItems = 0
+
+  for (let index in contentHierarchy) {
+    if(index < 4) {
+      const length = contentHierarchy[index].length;
+      if(length > 0) {
+        totalItems += length;
+      }
+    }
+  }
+
+  for (let i = 0; i < totalItems; i++) {
+    const targetItemParentId = targetItem._parentId;
+    if(typeof targetItemParentId !== 'undefined') {
+      const result = getHierarchyParentItem(contentHierarchy, targetItemParentId.toString());
+      if(result !== null) {
+        targetItem = result;
+        hierarchyPath.push(targetItem);
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
+
+  hierarchyPath = hierarchyPath.filter(({ _type }) => (_type === 'menu' || _type === 'page'))
+  if(hierarchyPath.length > 0) {
+    hierarchyPath.reverse()
+    title =  hierarchyPath.map((el) => {
+      return el.title
+    }).join(" > ")
+  }
+
+  return title !== '' ? item.title + ` (${title})` : item.title
+}
+
+/**
+ * Find parent contentHierarchy item
+ * @param {array} contentHierarchy
+ * @param {string} parentId
+ * @returns {null|object}
+ */
+function getHierarchyParentItem(contentHierarchy, parentId) {
+  let targetItem = null;
+  if(typeof contentHierarchy !== 'undefined' && contentHierarchy.length > 0) {
+    for (let index in contentHierarchy) {
+      const el = contentHierarchy[index];
+      if(Array.isArray(el)) {
+        let result = getHierarchyParentItem(el, parentId)
+        if(result !== null) {
+          targetItem = result;
+        }
+      } else {
+        const id = el._id.toString();
+        if(id === parentId) {
+          targetItem = {...el};
+        }
+      }
+    }
+  }
+
+  return targetItem
 }
 
 function ImportError(message, httpStatus) {
