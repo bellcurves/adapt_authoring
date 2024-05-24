@@ -327,16 +327,21 @@ function iterateThroughChildren(parents, children, contentHierarchy) {
 
     if (typeof children === 'undefined') {
       const pageTitle = getPageTitleByChildren(contentHierarchy, parent);
-      appendError(parentType, pageTitle, childType);
+      appendError(parentType, pageTitle + ' -- ', childType);
       return;
     }
 
     if (children[0] && children[0]._type) childType = app.polyglot.t('app.' + children[0]._type, 0);
     let found = children.find(child => JSON.stringify(child._parentId) === JSON.stringify(parent._id));
 
+    // Menu may contain other menus and do not contain pages
+    if (typeof found === 'undefined' && parent._type.toString() === 'menu') {
+      found = parents.find(childMenu => JSON.stringify(childMenu._parentId) === JSON.stringify(parent._id));
+    }
+
     if (typeof found === 'undefined') {
       const pageTitle = getPageTitleByChildren(contentHierarchy, parent);
-      appendError(parentType, pageTitle, childType);
+      appendError(parentType, pageTitle + ' ++ ', childType);
     }
   });
   return errors;
