@@ -85,7 +85,7 @@ define([
     }
 
     until(isAttached(this.$el)).then(function() {
-      this.editor = CKEDITOR.replace(this.$el[0], {
+      this.editor = CKEDITOR.replace(this.$el[0], Object.assign({
         dataIndentationChars: '',
         disableNativeSpellChecker: false,
         enterMode: CKEDITOR[Origin.constants.ckEditorEnterMode],
@@ -127,9 +127,8 @@ define([
           { name: 'tools', items: [] },
           { name: 'others', items: [ '-' ] }
         ],
-        extraPlugins: Origin.constants.ckEditorExtraPlugins,
-        ...Origin.constants.ckEditorExtraOptions
-      });
+        extraPlugins: Origin.constants.ckEditorExtraPlugins
+      }, Origin.constants.ckEditorExtraOptions));
     }.bind(this));
 
     return this;
