@@ -143,7 +143,7 @@ function doUpdate(data) {
         if(error) {
           console.log(`Failed to update ${configuration.serverRoot} to '${data.adapt_authoring}'`);
           console.log('-----------');
-          console.log(error);
+          console.trace();
           console.log('-----------');
           return cb(error);
         }
