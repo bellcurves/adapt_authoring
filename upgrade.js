@@ -142,6 +142,7 @@ function doUpdate(data) {
       }, function(error) {
         if(error) {
           console.log(`Failed to update ${configuration.serverRoot} to '${data.adapt_authoring}'`);
+          console.error(chalk.red(error));
           return cb(error);
         }
         console.log(`${app.polyglot.t('app.productname')} upgraded to ${data.adapt_authoring}`);
