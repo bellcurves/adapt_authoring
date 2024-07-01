@@ -60,7 +60,15 @@ define(function(require){
       const $title = this.$('.asset-title');
       const $description = this.$('.asset-description');
       // Default 'title' -- remove C:\fakepath if it is added
-      const title = this.removeExtensionName(this.$('.asset-file')[0].value.replace("C:\\fakepath\\", ""));
+      let title = this.removeExtensionName(this.$('.asset-file')[0].value.replace("C:\\fakepath\\", ""));
+      if(!title.includes(' ')) {
+        if(title.includes('_')) {
+          title = title.replaceAll('_', ' ');
+        } else if(title.includes('-')) {
+          title = title.replaceAll('-', ' ')  ;
+        }
+      }
+
       $title.val(title);
       $description.val(title);
     },
