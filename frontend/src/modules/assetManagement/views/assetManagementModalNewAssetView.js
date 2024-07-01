@@ -58,7 +58,7 @@ define(function(require){
 
     onChangeFile: function(event) {
       const $title = this.$('.asset-title');
-      const $description = this.$('asset-description');
+      const $description = this.$('.asset-description');
       // Default 'title' -- remove C:\fakepath if it is added
       const title = this.removeExtensionName(this.$('.asset-file')[0].value.replace("C:\\fakepath\\", ""));
       $title.val(title);
