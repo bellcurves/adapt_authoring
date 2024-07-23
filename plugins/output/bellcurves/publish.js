@@ -42,8 +42,8 @@ function publishCourse(courseId, mode, request, response, next) {
   const CDN_RELEASE_ID = shortid().toLowerCase();
   const CDN_RELEASE_FOLDER = path.join(CDN_FOLDER, CDN_RELEASE_ID);
   const CDN_DOMAIN = configuration.getConfig('courseCdnDomain');
-  const CDN_RELEASES_NUM = 3
-  const SRC_DIR = path.resolve(__dirname, 'src')
+  const CDN_RELEASES_NUM = 0;
+  const SRC_DIR = path.resolve(__dirname, 'src');
 
   let releaseInfo = { current: null, releases: [], index: 0 };
 
@@ -266,25 +266,37 @@ function publishCourse(courseId, mode, request, response, next) {
     function(callback) {
       releaseInfo.index = releaseInfo.index + 1;
       const currentReleaseInfo = {
+        index: releaseInfo.index,
         id: CDN_RELEASE_ID,
+        course: courseId,
         date: new Date().toUTCString(),
         url: new URL(courseId + '/' + CDN_RELEASE_ID, CDN_DOMAIN).href,
-        index: releaseInfo.index
+        zip: new URL(courseId + '/' + CDN_RELEASE_ID + '.zip', CDN_DOMAIN).href
       }
 
       releaseInfo.current = currentReleaseInfo;
-      releaseInfo.releases.push(currentReleaseInfo);
-
-      let rTarget = releaseInfo.index - CDN_RELEASES_NUM;
-      releaseInfo.releases = releaseInfo.releases.filter((release) => release.index > rTarget);
+      if (CDN_RELEASES_NUM > 0) {
+        releaseInfo.releases.push(currentReleaseInfo);
+        let rTarget = releaseInfo.index - CDN_RELEASES_NUM;
+        releaseInfo.releases = releaseInfo.releases.filter((release) => release.index > rTarget);
+      } else if (typeof releaseInfo.releases !== 'undefined') {
+        delete releaseInfo.releases;
+      }
 
       fsExtra.writeJsonSync(CDN_RELEASE_FILE, releaseInfo);
       callback(null);
     },
     function (callback) {
       const excludeList = ['release.json', 'index.html'];
-      for (const release of releaseInfo.releases) {
-        excludeList.push(release.id);
+
+      if(typeof releaseInfo.releases !== 'undefined') {
+        for (const release of releaseInfo.releases) {
+          excludeList.push(release.id);
+          excludeList.push(release.id + '.zip');
+        }
+      } else {
+        excludeList.push(releaseInfo.current.id);
+        excludeList.push(releaseInfo.current.id + '.zip');
       }
       fs.readdir(CDN_FOLDER, (err, files) => {
         if (err) {
@@ -298,6 +310,25 @@ function publishCourse(courseId, mode, request, response, next) {
         }
         return callback(null);
       });
+    },
+    function(callback) {
+      // Now zip the build package
+      const filename = path.join(CDN_FOLDER, releaseInfo.current.id + '.zip');
+      const output = fs.createWriteStream(filename);
+      const archive = archiver('zip');
+
+      output.on('close', function() {
+        // Indicate that the zip file is ready for download
+        // app.emit('zipCreated', tenantId, courseId, filename, zipName);
+        callback();
+      });
+      archive.on('error', function(err) {
+        logger.log('error', err);
+        callback(err);
+      });
+      archive.pipe(output);
+      archive.glob('**/*', { cwd: path.join(BUILD_FOLDER) });
+      archive.finalize();
     },
     function(callback) {
       resultObject.url = new URL(courseId, CDN_DOMAIN).href
