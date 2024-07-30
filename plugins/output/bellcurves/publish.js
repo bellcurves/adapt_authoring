@@ -68,6 +68,7 @@ function publishCourse(courseId, mode, request, response, next) {
         }
         // Store off the retrieved collections
         outputJson = data;
+        outputJson.block = outputHelpers.removeEmptyBlocks(outputJson.block, outputJson.component);
         callback(null);
       });
     },

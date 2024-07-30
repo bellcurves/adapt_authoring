@@ -46,10 +46,7 @@ define(function(require) {
         'editorView:paste': this.pasteFromClipboard,
         'editorCommon:download': this.downloadProject,
         'editorCommon:publish': this.publishProject,
-        'editorCommon:preview': function(isForceRebuild) {
-          var previewWindow = window.open('loading', 'preview');
-          this.previewProject(previewWindow, isForceRebuild);
-        },
+        'editorCommon:preview': this.previewProjectEvent,
         'editorCommon:export': this.exportProject
       });
       this.render();
@@ -65,6 +62,17 @@ define(function(require) {
     },
 
     remove: function() {
+      this.stopListening(Origin, {
+        'editorView:refreshView': this.setupEditor,
+        'editorView:copy': this.addToClipboard,
+        'editorView:copyID': this.copyIdToClipboard,
+        'editorView:paste': this.pasteFromClipboard,
+        'editorCommon:download': this.downloadProject,
+        'editorCommon:publish': this.publishProject,
+        'editorCommon:preview': this.previewProjectEvent,
+        'editorCommon:export': this.exportProject
+      });
+
       $('body').off('click', '.course-public-url-copy');
       if (this.popupCopyTimer !== null) {
         clearTimeout(this.popupCopyTimer);
@@ -73,6 +81,11 @@ define(function(require) {
 
     setupEditor: function() {
       this.renderCurrentEditorView();
+    },
+
+    previewProjectEvent: function (isForceRebuild) {
+      const previewWindow = window.open('loading', 'preview');
+      this.previewProject(previewWindow, isForceRebuild);
     },
 
     previewProject: function(previewWindow, forceRebuild) {

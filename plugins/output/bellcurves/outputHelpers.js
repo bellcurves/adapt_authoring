@@ -348,6 +348,23 @@ function iterateThroughChildren(parents, children, contentHierarchy) {
 }
 
 /**
+ * Remove empty blocks with no components
+ * @param blocks
+ * @param components
+ * @returns {*[]}
+ */
+function removeEmptyBlocks(blocks, components) {
+  const clearBlocks = [];
+  blocks.forEach(block => {
+    const found = components.find(component => JSON.stringify(component._parentId) === JSON.stringify(block._id));
+    if (found !== undefined) {
+      clearBlocks.push(block);
+    }
+  });
+  return clearBlocks;
+}
+
+/**
  * Get item title with the full path in the title, example: Block Title (Menu Title > Page Title)
  * @param {array} contentHierarchy
  * @param {object} item
@@ -468,5 +485,6 @@ exports = module.exports = {
   PartialImportError: PartialImportError,
   sortContentObjects: sortContentObjects,
   cleanUpImport: cleanUpImport,
-  validateCourse: validateCourse
+  validateCourse: validateCourse,
+  removeEmptyBlocks: removeEmptyBlocks
 };
