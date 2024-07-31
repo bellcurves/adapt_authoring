@@ -238,6 +238,7 @@ define(function(require){
       if (typeof this.filters !== 'undefined') {
         this.stopListening(Origin, 'sidebarFieldsetFilter:filterForm', this.filterForm);
       }
+      OriginView.prototype.remove.apply(this, arguments);
     }
   });
 
