@@ -77,6 +77,8 @@ define(function(require) {
       if (this.popupCopyTimer !== null) {
         clearTimeout(this.popupCopyTimer);
       }
+
+      EditorOriginView.prototype.remove.apply(this, arguments);
     },
 
     setupEditor: function() {
